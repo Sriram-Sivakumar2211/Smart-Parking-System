@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartPark — Intelligent Parking System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">🅿</div>
+    <div class="logo-text">Smart<span>Park</span></div>
+  </div>
+
+  <nav>
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" onclick="setNav(this,'dashboard')">
+      <span class="nav-icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="setNav(this,'parking')">
+      <span class="nav-icon">🗺️</span> Parking Map
+    </div>
+    <div class="nav-item" onclick="setNav(this,'bookings')">
+      <span class="nav-icon">📅</span> Bookings
+      <span class="badge" id="bookingBadge">3</span>
+    </div>
+
+    <div class="nav-section">Management</div>
+    <div class="nav-item" onclick="setNav(this,'vehicles')">
+      <span class="nav-icon">🚗</span> Vehicles
+    </div>
+    <div class="nav-item" onclick="setNav(this,'reports')">
+      <span class="nav-icon">📈</span> Reports
+    </div>
+    <div class="nav-item" onclick="setNav(this,'settings')">
+      <span class="nav-icon">⚙️</span> Settings
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="avatar">AD</div>
+      <div class="user-info">
+        <div class="user-name">Admin</div>
+        <div class="user-role">Operator</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pageTitle">Dashboard</div>
+      <div class="live-dot" style="margin-top:4px">LIVE</div>
+    </div>
+    <div class="topbar-right">
+      <div class="search-box">🔍 Search slot, vehicle…</div>
+      <button class="btn btn-primary" onclick="openBookingModal()">+ New Booking</button>
+      <button class="btn btn-ghost">🔔</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- DASHBOARD PANEL -->
+    <div class="panel active" id="panel-dashboard">
+      <!-- STATS -->
+      <div class="stats-row" style="margin-bottom:20px">
+        <div class="stat-card green">
+          <div class="stat-label">Available Slots</div>
+          <div class="stat-value" id="freeCount">32</div>
+          <div class="stat-sub"><span class="stat-dot" style="background:var(--green)"></span> Ready for booking</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-label">Occupied</div>
+          <div class="stat-value" id="occCount">48</div>
+          <div class="stat-sub"><span class="stat-dot" style="background:var(--red)"></span> Vehicles parked</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-label">Reserved</div>
+          <div class="stat-value" id="resCount">10</div>
+          <div class="stat-sub"><span class="stat-dot" style="background:var(--yellow)"></span> Pre-booked slots</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-label">Revenue Today</div>
+          <div class="stat-value" id="revenueToday">₹4,820</div>
+          <div class="stat-sub"><span class="stat-dot" style="background:var(--blue)"></span> +12% vs yesterday</div>
+        </div>
+      </div>
+
+      <div class="middle-row">
+        <!-- MAP -->
+        <div class="parking-map-card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Parking Floor View</div>
+              <div class="card-sub">Click a slot to manage</div>
+            </div>
+            <div class="legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Free</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Occupied</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> Reserved</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--muted)"></div> Disabled</div>
+            </div>
+          </div>
+
+          <div class="floor-tabs">
+            <div class="floor-tab active" onclick="setFloor(0,this)">Ground</div>
+            <div class="floor-tab" onclick="setFloor(1,this)">Floor 1</div>
+            <div class="floor-tab" onclick="setFloor(2,this)">Floor 2</div>
+          </div>
+
+          <div class="road-label">← ENTRANCE / EXIT ROAD →</div>
+          <div class="parking-grid" id="parkingGrid"></div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="right-panel">
+          <!-- BOOKING FORM -->
+          <div class="booking-card">
+            <h3>⚡ Quick Book</h3>
+            <div class="form-group">
+              <label class="form-label">Selected Slot</label>
+              <div class="selected-slot-display" id="selectedSlotDisplay">Click a free slot on the map</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vehicle Number</label>
+              <input class="form-input" id="qVehicle" placeholder="TN 01 AB 1234" maxlength="15" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vehicle Type</label>
+              <select class="form-select" id="qType">
+                <option>Car</option>
+                <option>Bike</option>
+                <option>Truck</option>
+                <option>EV</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Duration (minutes)</label>
+              <input class="form-input" id="qDuration" type="number" min="1" max="1440" value="120" />
+            </div>
+            <button class="btn btn-primary btn-full" onclick="quickBook()">Confirm Booking →</button>
+          </div>
+
+          <!-- ACTIVITY -->
+          <div class="activity-card">
+            <div class="card-header">
+              <div class="card-title">Live Activity</div>
+            </div>
+            <div class="activity-list" id="activityList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM -->
+      <div class="bottom-row">
+        <!-- RECENT BOOKINGS TABLE -->
+        <div class="recent-card">
+          <div class="card-header">
+            <div class="card-title">Recent Bookings</div>
+          </div>
+          <div class="table-wrap">
+            <table id="bookingsTable">
+              <thead>
+                <tr>
+                  <th>Slot</th>
+                  <th>Vehicle</th>
+                  <th>Duration</th>
+                  <th>Status</th>
+                  <th>Fee</th>
+                </tr>
+              </thead>
+              <tbody id="bookingsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- CHART -->
+        <div class="recent-card">
+          <div class="card-header">
+            <div class="card-title">Occupancy — Today</div>
+            <div class="card-sub">Minute-by-minute breakdown</div>
+          </div>
+          <div class="chart-bars" id="chartBars"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OTHER PANELS (placeholder) -->
+    <div class="panel" id="panel-parking">
+      <div class="parking-map-card" style="min-height:500px">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Full Parking Map</div>
+            <div class="card-sub">All floors, all zones</div>
+          </div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Free</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Occupied</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div> Reserved</div>
+          </div>
+        </div>
+        <div class="floor-tabs">
+          <div class="floor-tab active" onclick="setFloor(0,this)">Ground</div>
+          <div class="floor-tab" onclick="setFloor(1,this)">Floor 1</div>
+          <div class="floor-tab" onclick="setFloor(2,this)">Floor 2</div>
+        </div>
+        <div class="road-label">← ENTRANCE / EXIT ROAD →</div>
+        <div class="parking-grid" id="parkingGrid2"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-bookings">
+      <div class="recent-card">
+        <div class="card-header">
+          <div class="card-title">All Bookings</div>
+          <button class="btn btn-primary" onclick="openBookingModal()">+ New</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Slot</th><th>Vehicle</th><th>Type</th><th>Duration</th><th>Status</th><th>Fee</th><th>Action</th></tr>
+            </thead>
+            <tbody id="allBookingsTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-vehicles">
+      <div class="recent-card">
+        <div class="card-header"><div class="card-title">Registered Vehicles</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Vehicle No</th><th>Type</th><th>Owner</th><th>Total Visits</th><th>Status</th></tr></thead>
+            <tbody id="vehiclesTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-reports">
+      <div class="stats-row" style="margin-bottom:20px">
+        <div class="stat-card blue"><div class="stat-label">Monthly Revenue</div><div class="stat-value">₹92,410</div><div class="stat-sub">April 2025</div></div>
+        <div class="stat-card green"><div class="stat-label">Total Bookings</div><div class="stat-value">1,284</div><div class="stat-sub">This month</div></div>
+        <div class="stat-card yellow"><div class="stat-label">Avg Occupancy</div><div class="stat-value">76%</div><div class="stat-sub">Across all floors</div></div>
+        <div class="stat-card red"><div class="stat-label">Violations</div><div class="stat-value">7</div><div class="stat-sub">Overstay this month</div></div>
+      </div>
+      <div class="recent-card">
+        <div class="card-header"><div class="card-title">Monthly Occupancy Chart</div></div>
+        <div class="chart-bars" id="monthChartBars" style="height:160px"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-settings">
+      <div class="recent-card" style="max-width:500px">
+        <div class="card-header"><div class="card-title">System Settings</div></div>
+        <div style="margin-top:16px; display:flex; flex-direction:column; gap:14px;">
+          <div class="form-group"><label class="form-label">Parking Lot Name</label><input class="form-input" value="SmartPark Central" /></div>
+          <div class="form-group"><label class="form-label">Rate per Minute (Car) ₹</label><input class="form-input" type="number" value="50" /></div>
+          <div class="form-group"><label class="form-label">Rate per Minute (Bike) ₹</label><input class="form-input" type="number" value="20" /></div>
+          <div class="form-group"><label class="form-label">Rate per Minute (EV) ₹</label><input class="form-input" type="number" value="40" /></div>
+          <div class="form-group"><label class="form-label">Max Booking Duration (mins)</label><input class="form-input" type="number" value="1440" /></div>
+          <button class="btn btn-primary" onclick="showToast('Settings saved!','success')">Save Settings</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="slotModal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Slot Details</div>
+    <div class="modal-sub" id="modalSub">Ground Floor · Zone A</div>
+    <div class="slot-info-grid" id="slotInfoGrid"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="bookingModal">
+  <div class="modal">
+    <div class="modal-title">New Booking</div>
+    <div class="modal-sub">Reserve a parking slot</div>
+    <div class="form-group"><label class="form-label">Vehicle Number</label><input class="form-input" id="bVehicle" placeholder="TN 01 AB 1234" /></div>
+    <div class="form-group"><label class="form-label">Vehicle Type</label><select class="form-select" id="bType"><option>Car</option><option>Bike</option><option>Truck</option><option>EV</option></select></div>
+    <div class="form-group"><label class="form-label">Duration (minutes)</label><input class="form-input" id="bDuration" type="number" min="1" max="1440" value="120" /></div>
+    <div class="form-group"><label class="form-label">Preferred Zone</label><select class="form-select" id="bZone"><option>Auto-assign</option><option>Zone A</option><option>Zone B</option><option>Zone C</option></select></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModals()">Cancel</button>
+      <button class="btn btn-primary" onclick="createBooking()">Book Now →</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
